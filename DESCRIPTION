@@ -1,0 +1,21 @@
+Package: jagstools
+Type: Package
+Title: jagstools
+Version: 0.1
+Date: 2015-18-04
+Author: Michael Malick
+Maintainer: Michael Malick <malickmj@gmail.com>
+Depends: 
+    R (>= 3.0)
+Imports: 
+    rjags,
+    coda
+Suggests: 
+    parallel,
+    iterators,
+    doParallel,
+    doMC,
+    foreach,
+    testthat
+Description: NA
+License: MIT
