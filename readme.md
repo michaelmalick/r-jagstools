@@ -24,7 +24,5 @@ The `jagstools` package is not on CRAN, but can be installed from R using:
     library(jagstools)
 
 
-# License 
-The `jagstools` package is [MIT/X11](http://opensource.org/licenses/MIT)
-licensed. Copyright (c) 2015 Michael Malick
-
+# License
+MIT
