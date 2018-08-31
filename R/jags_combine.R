@@ -8,12 +8,12 @@
 #'
 #' @param \dots
 #'      mcmc object
-#'  
+#'
 #' @return
 #'      An \code{mcmc.list}
 #'
 #' @seealso \code{\link{mcmc}} \code{\link{mcmc.list}}
-#' 
+#'
 #' @export
 #'
 #' @author Michael Malick

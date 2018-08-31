@@ -2,7 +2,7 @@ Package: jagstools
 Type: Package
 Title: jagstools
 Version: 0.1
-Date: 2015-18-04
+Date: 2018-08-31
 Author: Michael Malick
 Maintainer: Michael Malick <malickmj@gmail.com>
 Depends: 
@@ -17,5 +17,6 @@ Suggests:
     doMC,
     foreach,
     testthat
-Description: NA
-License: MIT
+Description: Run JAGS in parallel from R.
+License: file LICENSE
+RoxygenNote: 6.0.1
