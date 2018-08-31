@@ -1,14 +1,10 @@
 library(jagstools)
 library(rjags)
-library(foreach)
 context("Defaults for jags_sample")
 
 
 
-# ----------------------------
-# Setup data and JAGS model
-# ----------------------------
-# {{{
+## Setup data and JAGS model -------------------------------
 sim.data <- function(N = 100) {
 
     # True parameter values
@@ -32,7 +28,7 @@ set.seed(129)
 dat <- sim.data()
 
 
-model.string <-    
+model.string <-
     'model {
         for (i in 1:N){
             y[i] ~ dnorm(mu.y[i], tau)
@@ -46,14 +42,11 @@ model.string <-
     }'
 writeLines(model.string, con = "example_jags.bug")
 
-params <- c("alpha", "beta", "sigma") 
-
-# }}}
+params <- c("alpha", "beta", "sigma")
 
 
-# ----------------------------
-# Test default settings
-# ----------------------------
+
+## Test default settings -----------------------------------
 inits <- function() list(alpha = rnorm(1), beta = rnorm(1), sigma = runif(1))
 
 
@@ -63,28 +56,25 @@ test_that("jags_sample defaults", {
     # https://github.com/hadley/testthat/issues/129
     Sys.setenv("R_TESTS" = "")
 
-    fit.s <- jags_sample(
-        data = dat,
-        inits = inits,
-        file = "example_jags.bug",
-        variable.names = params,
-        method = "serial",
-        progress.bar = "none")
+    fit.s <- jags_sample(data = dat,
+                         inits = inits,
+                         file = "example_jags.bug",
+                         variable.names = params,
+                         method = "serial",
+                         progress.bar = "none")
 
-    fit.p <- jags_sample(
-        data = dat,
-        inits = inits,
-        file = "example_jags.bug",
-        variable.names = params,
-        method = "parallel",
-        progress.bar = "none")
-
+    fit.p <- jags_sample(data = dat,
+                         inits = inits,
+                         file = "example_jags.bug",
+                         variable.names = params,
+                         method = "parallel",
+                         progress.bar = "none")
 
     expect_equal(class(fit.s), "mcmc.list")
     expect_equal(thin(fit.s), 1)
     expect_equal(dim(fit.s[[1]])[1], 1000)
     expect_equal(length(fit.s), 1)
-    #
+
     expect_equal(class(fit.p), "mcmc.list")
     expect_equal(thin(fit.p), 1)
     expect_equal(dim(fit.p[[1]])[1], 1000)
@@ -92,10 +82,5 @@ test_that("jags_sample defaults", {
 })
 
 
-
-
-
-
-
-##
+## clean-up
 unlink("example_jags.bug")

@@ -1,14 +1,10 @@
 library(jagstools)
 library(rjags)
-library(foreach)
 context("Reproducibility")
 
 
 
-# ----------------------------
-# Setup data and JAGS model
-# ----------------------------
-# {{{
+## Setup data and JAGS model -------------------------------
 sim.data <- function(N = 100) {
 
     # True parameter values
@@ -32,7 +28,7 @@ set.seed(129)
 dat <- sim.data()
 
 
-model.string <-    
+model.string <-
     'model {
         for (i in 1:N){
             y[i] ~ dnorm(mu.y[i], tau)
@@ -46,19 +42,15 @@ model.string <-
     }'
 writeLines(model.string, con = "example_jags.bug")
 
-params <- c("alpha", "beta", "sigma") 
-
-# }}}
+params <- c("alpha", "beta", "sigma")
 
 
 
-# ----------------------------
-# Test reproducibility
-# ----------------------------
-types <- c("PSOCK", "FORK", "MC")
+## Test reproducibility ------------------------------------
+types <- c("PSOCK", "FORK")
 
-## Setting both set.seed() and .RNG.seed inside the inits() function should make
-## each MCMC chain be identical
+## Setting both set.seed() and .RNG.seed inside the
+## inits() function should make each MCMC chain be identical
 for(j in 1:length(types)) {
     fit.s <- vector("list", 3)
     fit.p <- vector("list", 3)
@@ -72,25 +64,24 @@ for(j in 1:length(types)) {
                 alpha = rnorm(1), beta = rnorm(1), sigma = runif(1))
         }
 
-        fit.s[[i]] <- jags_sample(
-            data = dat,
-            inits = inits,
-            n.chains = 2,
-            file = "example_jags.bug",
-            variable.names = params,
-            method = "serial",
-            progress.bar = "none")
+        fit.s[[i]] <- jags_sample(data = dat,
+                                  inits = inits,
+                                  n.chains = 2,
+                                  file = "example_jags.bug",
+                                  variable.names = params,
+                                  method = "serial",
+                                  progress.bar = "none")
 
-        fit.p[[i]] <- jags_sample(
-            data = dat,
-            inits = inits,
-            n.chains = 2,
-            file = "example_jags.bug",
-            variable.names = params,
-            method = "parallel",
-            progress.bar = "none",
-            load.modules = "lecuyer",
-            parallel = list(n.clusters = 2, type = types[j]))
+        fit.p[[i]] <- jags_sample(data = dat,
+                                  inits = inits,
+                                  n.chains = 2,
+                                  file = "example_jags.bug",
+                                  variable.names = params,
+                                  method = "parallel",
+                                  progress.bar = "none",
+                                  load.modules = "lecuyer",
+                                  parallel = list(n.clusters = 2,
+                                                  type = types[j]))
 
     }
 
@@ -139,25 +130,24 @@ for(j in 1:length(types)) {
         }
         inits <- inits_fun()
 
-        fit.s[[i]] <- jags_sample(
-            data = dat,
-            inits = inits,
-            n.chains = 2,
-            file = "example_jags.bug",
-            variable.names = params,
-            method = "serial",
-            progress.bar = "none")
+        fit.s[[i]] <- jags_sample(data = dat,
+                                  inits = inits,
+                                  n.chains = 2,
+                                  file = "example_jags.bug",
+                                  variable.names = params,
+                                  method = "serial",
+                                  progress.bar = "none")
 
-        fit.p[[i]] <- jags_sample(
-            data = dat,
-            inits = inits,
-            n.chains = 2,
-            file = "example_jags.bug",
-            variable.names = params,
-            method = "parallel",
-            progress.bar = "none",
-            load.modules = "lecuyer",
-            parallel = list(n.clusters = 2, type = types[j]))
+        fit.p[[i]] <- jags_sample(data = dat,
+                                  inits = inits,
+                                  n.chains = 2,
+                                  file = "example_jags.bug",
+                                  variable.names = params,
+                                  method = "parallel",
+                                  progress.bar = "none",
+                                  load.modules = "lecuyer",
+                                  parallel = list(n.clusters = 2,
+                                                  type = types[j]))
 
     }
 
@@ -195,25 +185,25 @@ for(j in 1:length(types)) {
                 alpha = rnorm(1), beta = rnorm(1), sigma = runif(1))
         }
 
-        fit.s[[i]] <- jags_sample(
-            data = dat,
-            inits = inits,
-            n.chains = 2,
-            file = "example_jags.bug",
-            variable.names = params,
-            method = "serial",
-            progress.bar = "none")
+        fit.s[[i]] <- jags_sample(data = dat,
+                                  inits = inits,
+                                  n.chains = 2,
+                                  file = "example_jags.bug",
+                                  variable.names = params,
+                                  method = "serial",
+                                  progress.bar = "none")
 
-        fit.p[[i]] <- jags_sample(
-            data = dat,
-            inits = inits,
-            n.chains = 2,
-            file = "example_jags.bug",
-            variable.names = params,
-            method = "parallel",
-            progress.bar = "none",
-            load.modules = "lecuyer",
-            parallel = list(n.clusters = 2, RNGseed = 123, type = types[j]))
+        fit.p[[i]] <- jags_sample(data = dat,
+                                  inits = inits,
+                                  n.chains = 2,
+                                  file = "example_jags.bug",
+                                  variable.names = params,
+                                  method = "parallel",
+                                  progress.bar = "none",
+                                  load.modules = "lecuyer",
+                                  parallel = list(n.clusters = 2,
+                                                  RNGseed = 123,
+                                                  type = types[j]))
 
     }
 
@@ -228,7 +218,7 @@ for(j in 1:length(types)) {
         expect_equal(class(all.equal(fit.p[[1]][[1]], fit.p[[1]][[2]])),
             "character")
 
-        ## chains across calls to jags_samples should be equal for parallel 
+        ## chains across calls to jags_samples should be equal for parallel
         ## but not for serial computation
         expect_equal(class(all.equal(fit.s[[1]][[1]], fit.s[[2]][[1]])),
             "character")
@@ -239,5 +229,5 @@ for(j in 1:length(types)) {
 }
 
 
-##
+## clean-up
 unlink("example_jags.bug")

@@ -3,7 +3,7 @@
 #' @description
 #'      \code{jags_sample} is a wrapper for functions in the \code{rjags}
 #'      package that allows for running JAGS from R with each MCMC chain
-#'      computed serially or in parallel using the foreach package.
+#'      computed serially or in parallel using the \code{parallel} package.
 #'
 #' @param data
 #'      a list containing the data for the model; see
@@ -60,10 +60,7 @@
 #'              clusters; setting this to a positive integer allows
 #'              the chains to be reproducible.}
 #'        \item{\code{type }}{type of cluster to create; either "PSOCK" or
-#'          "FORK", or "MC"; Both "PSOCK" and "FORK" are based on the
-#'          \code{snow} package, whereas "MC" is based on the \code{multicore}
-#'          package; type = "MC" is likely not available for Windows machines;
-#'          see \code{?parallel::makeCluster} for more details}
+#'          "FORK"; see \code{?parallel::makeCluster}.}
 #'        \item{\code{verbose }}{logical, should output from each cluster be
 #'          sent to terminal. Can be useful for debugging.}
 #'      }
@@ -72,14 +69,14 @@
 #' @details
 #'      If method = 'serial' the function runs JAGS using the
 #'      \code{rjags::coda.samples} function. If method = 'parallel' the function
-#'      uses the \code{parallel} and \code{foreach} packages to send each chain
+#'      uses the \code{parallel::parLapply} function to send each chain
 #'      to different clusters. Unfortunately, when the parallel type = 'PSOCK'
 #'      no progress bars are available. If parallel type = 'FORK' and verbose =
 #'      TRUE, progress bars should be printed to the terminal among other
 #'      potentially useful output.
 #'
-#'      Because the funtion returns an mcmc.list object, the model (as defined by
-#'      \code{rjags::jags.model}) is not retained and therefore, updating or
+#'      Because the funtion returns an mcmc.list object, the model (as defined
+#'      by \code{rjags::jags.model}) is not retained and therefore, updating or
 #'      extending the MCMC runs is currently unavailable. Adding this
 #'      functionality would require saving the model object, which would make
 #'      the return not an mcmc.list object and would likely require the creation
@@ -105,7 +102,6 @@
 #' # ----------------------------
 #'
 #' library(rjags)
-#' library(foreach)
 #'
 #' ## True parameter values
 #' alpha <- 3
@@ -151,70 +147,67 @@
 #'
 #' ## Setup function for initial values
 #' inits <- function() {
-#'     list(
-#'         .RNG.name  = "lecuyer::RngStream",
-#'         .RNG.seed  = runif(1, 0, 2^31),
-#'         alpha = rnorm(1), beta = rnorm(1), sigma = runif(1))
+#'     list(.RNG.name  = "lecuyer::RngStream",
+#'          .RNG.seed  = runif(1, 0, 2^31),
+#'          alpha = rnorm(1), beta = rnorm(1), sigma = runif(1))
 #' }
 #'
 #'
 #' # ----------------------------
 #' # Sample all chains in serial
 #' # ----------------------------
-#' fit.s <- jags_sample(
-#'     data = dat,
-#'     inits = inits,
-#'     file = "example_jags.bug",
-#'     variable.names = params,
-#'     n.chains = 2,
-#'     n.adapt = 100,
-#'     burnin = 100,
-#'     n.iter = 1000,
-#'     thin = 1,
-#'     load.modules = c("dic", "lecuyer"),
-#'     method = "serial",
-#'     progress.bar = "text")
+#' fit.s <- jags_sample(data = dat,
+#'                      inits = inits,
+#'                      file = "example_jags.bug",
+#'                      variable.names = params,
+#'                      n.chains = 2,
+#'                      n.adapt = 100,
+#'                      burnin = 100,
+#'                      n.iter = 1000,
+#'                      thin = 1,
+#'                      load.modules = c("dic", "lecuyer"),
+#'                      method = "serial",
+#'                      progress.bar = "text")
 #'
 #' # ----------------------------
 #' # Sample all chains in parallel
 #' # ----------------------------
-#' fit.p <- jags_sample(
-#'     data = dat,
-#'     inits = inits,
-#'     file = "example_jags.bug",
-#'     variable.names = params,
-#'     n.chains = 2,
-#'     n.adapt = 100,
-#'     burnin = 100,
-#'     n.iter = 1000,
-#'     thin = 1,
-#'     load.modules = c("dic", "lecuyer"),
-#'     method = "parallel",
-#'     progress.bar = "text",
-#'     parallel = list(
-#'         n.clusters = 2,
-#'         RNGseed = 123,
-#'         type = "PSOCK",
-#'         verbose = TRUE))
 #'
-#' fit.p <- jags_sample(
-#'     data = dat,
-#'     inits = inits,
-#'     file = "example_jags.bug",
-#'     variable.names = params,
-#'     n.chains = 2,
-#'     n.adapt = 100,
-#'     burnin = 100,
-#'     n.iter = 1000,
-#'     thin = 1,
-#'     load.modules = c("dic", "lecuyer"),
-#'     method = "parallel",
-#'     progress.bar = "text",
-#'     parallel = list(
-#'         n.clusters = 2,
-#'         RNGseed = 123,
-#'         type = "MC",
-#'         verbose = TRUE))
+#' ## type = "PSOCK"
+#' fit.p <- jags_sample(data = dat,
+#'                      inits = inits,
+#'                      file = "example_jags.bug",
+#'                      variable.names = params,
+#'                      n.chains = 2,
+#'                      n.adapt = 100,
+#'                      burnin = 100,
+#'                      n.iter = 1000,
+#'                      thin = 1,
+#'                      load.modules = c("dic", "lecuyer"),
+#'                      method = "parallel",
+#'                      progress.bar = "text",
+#'                      parallel = list(n.clusters = 2,
+#'                                      RNGseed = 123,
+#'                                      type = "PSOCK",
+#'                                      verbose = TRUE))
+#'
+#' ## type = "FORK"
+#' fit.p <- jags_sample(data = dat,
+#'                      inits = inits,
+#'                      file = "example_jags.bug",
+#'                      variable.names = params,
+#'                      n.chains = 2,
+#'                      n.adapt = 100,
+#'                      burnin = 100,
+#'                      n.iter = 1000,
+#'                      thin = 1,
+#'                      load.modules = c("dic", "lecuyer"),
+#'                      method = "parallel",
+#'                      progress.bar = "text",
+#'                      parallel = list(n.clusters = 2,
+#'                                      RNGseed = 123,
+#'                                      type = "FORK",
+#'                                      verbose = TRUE))
 
 
 ## jags_sample ---------------------------------------------
@@ -299,7 +292,6 @@ jags_parallel <- function(data,
     ind <- which(!names(arg.par) %in% names(parallel))
     parallel <- c(arg.par[ind], parallel)
 
-
     n.clusters <- parallel$n.clusters
 
     if(n.clusters != n.chains)
@@ -310,45 +302,31 @@ jags_parallel <- function(data,
     else
         outfile <- "/dev/null"
 
-    if(parallel$type == "PSOCK" || parallel$type == "FORK") {
-        ## Make cluster
-        if(parallel$type == "PSOCK")
-            cl <- parallel::makeCluster(n.clusters,
-                                        methods = FALSE,
-                                        type = "PSOCK",
-                                        outfile = outfile)
+    ## Make cluster
+    if(parallel$type == "PSOCK")
+        cl <- parallel::makeCluster(n.clusters,
+                                    methods = FALSE,
+                                    type = "PSOCK",
+                                    outfile = outfile)
 
-        if(parallel$type == "FORK")
-            cl <- parallel::makeCluster(n.clusters,
-                                        methods = FALSE,
-                                        type = "FORK",
-                                        outfile = outfile)
+    if(parallel$type == "FORK")
+        cl <- parallel::makeCluster(n.clusters,
+                                    methods = FALSE,
+                                    type = "FORK",
+                                    outfile = outfile)
 
-        doParallel::registerDoParallel(cl)
-        parallel::clusterSetRNGStream(cl, parallel$RNGseed)
-    }
+    ## Handle random numbers
+    parallel::clusterSetRNGStream(cl, parallel$RNGseed)
 
-    ## Need to manual handle RNG for 'multicore'
-    seeds <- vector("list", n.clusters)
-    if(parallel$type == "MC") {
-        doMC::registerDoMC(n.clusters)
-        RNGkind("L'Ecuyer-CMRG")
-        set.seed(parallel$RNGseed)
-        seeds[[1]] <- .Random.seed
-        if(n.clusters > 1)
-            for(i in 2:n.clusters)
-                seeds[[i]] <- parallel::nextRNGStream(seeds[[i - 1]])
-    }
+    ## Put inputs on to each cluster
+    parallel::clusterExport(cl, c("data", "inits", "file",
+                                  "variable.names", "n.adapt",
+                                  "burnin", "n.iter", "thin",
+                                  "load.modules", "progress.bar"),
+                            envir = environment())
 
-    samp <- foreach::foreach(i = iterators::icount(n.clusters),
-                             .combine = jags_combine,
-                             .packages = c("rjags"),
-                             .inorder = FALSE,
-                             .export = c("jags_serial"),
-                             .multicombine = TRUE) %dopar% {
-
-        if(parallel$type == "MC")
-            .Random.seed <- seeds[[i]]
+    ## Run parallel MCMC chains
+    samp <- parallel::parLapply(cl, seq_len(n.clusters), function(i) {
 
         ## Setup inits into a list
         inits.list <- logical()
@@ -376,13 +354,18 @@ jags_parallel <- function(data,
                            variable.names = variable.names,
                            load.modules = load.modules,
                            progress.bar = progress.bar)
-        return(fit)
-    }
 
-    if(parallel$type == "PSOCK" || parallel$type == "FORK")
-        parallel::stopCluster(cl)
+        fit.mcmc <- coda::as.mcmc(fit)
+        return(fit.mcmc)
+    })
 
-    return(samp)
+    ## Kill clusters
+    parallel::stopCluster(cl)
+
+    ## Convert list of mcmc objects to mcmc.list
+    samp.mcmc <- coda::as.mcmc.list(samp)
+
+    return(samp.mcmc)
 }
 
 

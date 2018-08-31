@@ -8,15 +8,11 @@ Maintainer: Michael Malick <malickmj@gmail.com>
 Depends: 
     R (>= 3.0)
 Imports: 
-    rjags,
-    coda
-Suggests: 
+    coda,
     parallel,
-    iterators,
-    doParallel,
-    doMC,
-    foreach,
+    rjags
+Suggests: 
     testthat
-Description: Run JAGS in parallel from R.
+Description: Run JAGS MCMC chains in parallel from R.
 License: file LICENSE
 RoxygenNote: 6.0.1

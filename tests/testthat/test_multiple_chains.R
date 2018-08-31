@@ -1,14 +1,10 @@
 library(jagstools)
 library(rjags)
-library(foreach)
 context("Multiple chains")
 
 
 
-# ----------------------------
-# Setup data and JAGS model
-# ----------------------------
-# {{{
+## Setup data and JAGS model -------------------------------
 sim.data <- function(N = 100) {
 
     # True parameter values
@@ -32,7 +28,7 @@ set.seed(129)
 dat <- sim.data()
 
 
-model.string <-    
+model.string <-
     'model {
         for (i in 1:N){
             y[i] ~ dnorm(mu.y[i], tau)
@@ -46,14 +42,11 @@ model.string <-
     }'
 writeLines(model.string, con = "example_jags.bug")
 
-params <- c("alpha", "beta", "sigma") 
-
-# }}}
+params <- c("alpha", "beta", "sigma")
 
 
-# ----------------------------
-# Test multiple chains
-# ----------------------------
+
+## Test multiple chains ------------------------------------
 inits <- function() list(alpha = rnorm(1), beta = rnorm(1), sigma = runif(1))
 
 test_that("jags_sample multiple chains", {
@@ -62,41 +55,39 @@ test_that("jags_sample multiple chains", {
     # https://github.com/hadley/testthat/issues/129
     Sys.setenv("R_TESTS" = "")
 
-    fit.s <- jags_sample(
-        data = dat,
-        inits = inits,
-        n.chains = 3,
-        file = "example_jags.bug",
-        variable.names = params,
-        method = "serial",
-        progress.bar = "none")
+    fit.s <- jags_sample(data = dat,
+                         inits = inits,
+                         n.chains = 3,
+                         file = "example_jags.bug",
+                         variable.names = params,
+                         method = "serial",
+                         progress.bar = "none")
 
-    ## This parallel code does not run on R CMD check when n.chains > 2
-    ## I don't know why???
-    fit.p <- jags_sample(
-        data = dat,
-        inits = inits,
-        n.chains = 2,
-        file = "example_jags.bug",
-        variable.names = params,
-        method = "parallel",
-        progress.bar = "none",
-        load.modules = "lecuyer",
-        parallel = list(n.clusters = 2))
+    ## R CMD check test fails if n.chains > 2
+    ## devtools::test() passes all tests if n.chains > 2
+    fit.p <- jags_sample(data = dat,
+                         inits = inits,
+                         n.chains = 2,
+                         file = "example_jags.bug",
+                         variable.names = params,
+                         method = "parallel",
+                         progress.bar = "none",
+                         load.modules = "lecuyer",
+                         parallel = list(n.clusters = 2))
 
     expect_equal(class(fit.s), "mcmc.list")
     expect_equal(class(fit.p), "mcmc.list")
     expect_equal(length(fit.s), 3)
     expect_equal(length(fit.p), 2)
-    ## make sure chain1 != chain2
+    ## make sure chain1 != chain2 != chain3
     expect_equal(class(all.equal(fit.s[[1]], fit.s[[2]])), "character")
     expect_equal(class(all.equal(fit.s[[1]], fit.s[[3]])), "character")
     expect_equal(class(all.equal(fit.s[[2]], fit.s[[3]])), "character")
     expect_equal(class(all.equal(fit.p[[1]], fit.p[[2]])), "character")
+    ## expect_equal(class(all.equal(fit.p[[1]], fit.p[[3]])), "character")
+    ## expect_equal(class(all.equal(fit.p[[2]], fit.p[[3]])), "character")
 })
 
 
-
-
-##
+## clean-up
 unlink("example_jags.bug")
